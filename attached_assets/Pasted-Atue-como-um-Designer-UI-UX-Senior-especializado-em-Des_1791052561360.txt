@@ -1,0 +1,62 @@
+Atue como um Designer UI/UX Senior especializado em Design Systems corporativos, dashboards SaaS B2B e aplicativos móveis de alta produtividade. Sua tarefa é projetar a interface gráfica completa (UI/UX) para a plataforma "SaaS de Controle de Ponto Inteligente com Reconhecimento Facial e Geolocalização".
+
+---
+
+### 1. DIRETRIZES DE ESTILO E DESIGN SYSTEM (White Label Ready)
+
+- Estética: Cyberpunk/Industrial Dark clean e moderno, focado em alta legibilidade, contraste acessível e densidade de informação equilibrada.
+- Cores Primárias:
+  - Background Principal: Dark Slate (#0D233A / #0F172A).
+  - Superfícies/Cards: Dark Navy (#1E293B / #1A2E40) com bordas sutis (#334155).
+  - Cor de Destaque / Ação: Azul Elétrico (#2B6CB0 / #3182CE) e Verde Sucesso (#10B981) para confirmações.
+  - Alertas/Erros: Vermelho Coral (#EF4444) e Amarelo Alerta (#F59E0B).
+- Tipografia: Inter ou Roboto, garantindo hierarquia clara em tabelas e relógios digitais.
+- Componentes Base: Tailwind CSS + Shadcn/ui (Cards, Badges, Tables, Dialogs, Tooltips, Buttons com feedback tátil).
+
+---
+
+### 2. TELAS DO PAINEL WEB DE GESTÃO (RH / GESTOR) - React + Tailwind
+
+Projete os layouts e componentes para as seguintes visualizações principais:
+
+1. Dashboard Principal (Visão Geral em Tempo Real):
+   - Cards de Indicadores (KPIs): Total de Presentes, Ausentes, Atrasados, Em Intervalo e Solicitações de Ajuste Pendentes.
+   - Mapa de Geolocalização (Heatmap/Geofencing): Componente de mapa mostrando onde os pontos remotos e de campo foram batidos.
+   - Lista de Atividade Recente: Feed ao vivo das últimas batidas de ponto com foto em miniatura, horário e status de validação (Biometria OK / GPS OK).
+
+2. Espelho de Ponto e Gestão de Funcionários:
+   - Tabela de Jornada Diária: Tabela com paginação, filtros por departamento/escala e marcadores visuais para inconsistências (ex: ausência de marcação de saída, hora extra não autorizada).
+   - Modal de Aprovação de Ajustes: Pop-up para o gestor revisar solicitações de correção de ponto enviadas pelos funcionários, com suporte à visualização de anexos (atestados em PDF/imagem).
+
+3. Módulo de Compliance e Exportação Fiscal:
+   - Painel para geração de arquivos legais (AEJ e AFD) com seletor de período (datas início/fim) e indicador do status de geração do arquivo.
+
+---
+
+### 3. TELAS DO APLICATIVO MÓVEL (COLABORADOR) - Prototipagem Mobile
+
+Projete as telas com foco em uso rápido e acessibilidade no smartphone:
+
+1. Tela de Login e Seleção de Modo:
+   - Campo para CPF/Matrícula com alternância visível entre "Acesso Individual" e "Modo Quiosque / Totem" (para tablets em recepções).
+   - Seletor rápido de idiomas no topo (PT, EN, ES).
+
+2. Dashboard da Home (Colaborador):
+   - Relógio Digital Sincronizado grande no centro da tela.
+   - Botão Principal Prominente "BATER PONTO" com animação de toque/pulse.
+   - Widget de Produtividade Pessoal: Gráfico circular ou barra com o progresso das horas cumpridas no dia e cálculo de saldo da semana.
+
+3. Tela de Captura Facial e Geolocalização:
+   - Guia visual de enquadramento (máscara oval pontilhada que muda de cor: vermelho para incorreto, verde para ideal).
+   - Indicadores visuais de leitura: "Liveness OK", "GPS Validado", "Óculos/Máscara ausentes".
+
+4. Comprovante Digital (Pós-Batida):
+   - Modal/Card com resumo do registro, protocolo com Hash SHA-256 e botão rápido "Compartilhar no WhatsApp".
+
+---
+
+### 4. ENTREGÁVEIS ESPERADOS
+
+1. Componentes reutilizáveis estruturados usando Tailwind CSS e Shadcn/ui.
+2. Layouts completos em JSX/TSX para a pasta `artifacts/mockup-sandbox/` usando o design system definido.
+3. Responsividade total (mobile-first para o colaborador e layout adaptável de desktop para o painel web de gestão).

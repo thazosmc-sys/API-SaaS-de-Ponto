@@ -1,0 +1,55 @@
+:root {
+  --nexo-bg: #0d233a;
+  --nexo-panel: #1e293b;
+  --nexo-surface: #1a2e40;
+  --nexo-line: #334155;
+  --nexo-blue: #3182ce;
+  --nexo-blue-deep: #2b6cb0;
+  --nexo-green: #10b981;
+  --nexo-red: #ef4444;
+  --nexo-amber: #f59e0b;
+  --nexo-muted: #91a4b7;
+  --nexo-text: #f1f5f9;
+  --nexo-font: "Inter", "Roboto", ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes nexo-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(49 130 206 / 35%);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(49 130 206 / 0%);
+  }
+}
+
+@keyframes nexo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nexo-pulse {
+  animation: nexo-pulse 2.2s ease-out infinite;
+}
+
+.nexo-enter {
+  animation: nexo-enter 420ms ease-out both;
+}
+
+.nexo-grid {
+  background-image:
+    linear-gradient(rgb(148 163 184 / 7%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 7%) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.nexo-scrollbar {
+  scrollbar-color: #334155 transparent;
+  scrollbar-width: thin;
+}
