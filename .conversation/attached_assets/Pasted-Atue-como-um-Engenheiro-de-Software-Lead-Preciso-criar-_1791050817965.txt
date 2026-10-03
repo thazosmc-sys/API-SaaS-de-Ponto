@@ -1,0 +1,45 @@
+Atue como um Engenheiro de Software Lead. Preciso criar a estrutura inicial (boilerplate) de uma API em Python (FastAPI) para um sistema SaaS de controle de ponto com reconhecimento facial e multi-tenancy.
+
+---
+
+### 1. ESTRUTURA DE PASTAS ESPERADA
+- /app
+  - /api (rotas/endpoints)
+  - /core (configurações, segurança e JWT)
+  - /db (conexão SQLAlchemy e modelos ORM)
+  - /models (modelos SQLAlchemy de domínio)
+  - /schemas (schemas Pydantic v2)
+  - /services (lógica de visão computacional e motor de ponto)
+- main.py (ponto de entrada FastAPI)
+- requirements.txt
+
+---
+
+### 2. REQUISITOS TÉCNICOS E MODELOS DO BANCO
+Use PostgreSQL com SQLAlchemy 2.0 (AsyncIO) e Pydantic v2.
+
+Crie os modelos SQLAlchemy para as seguintes entidades fundamentais (com tenant_id obrigatoriamente):
+1. Multi-Tenancy: `Tenant`, `TenantSetting`, `User` (com CPF, e-mail e hash de senha).
+2. Colaboradores: `Employee`, `EmployeeDevice`.
+3. Biometria: `FacialTemplate` (com suporte a armazenamento de vetor 512-dim ou ARRAY de float para embeddings faciais) e `FacialVerification`.
+4. Registro de Ponto: `TimeRecord` contendo:
+   - client_timestamp (TIMESTAMP com timezone)
+   - server_timestamp (TIMESTAMP com timezone)
+   - offline_created_at e sync_timestamp
+   - is_synced (Boolean)
+   - record_type (Enum: ENTRADA_1, SAIDA_1, ENTRADA_2, SAIDA_2)
+   - latitude e longitude (Float)
+   - hash_signature (String SHA-256)
+5. Auditoria: `AuditLog` (com JSONB para old_values e new_values).
+
+---
+
+### 3. ROTAS A IMPLEMENTAR EM /api/v1
+1. POST /auth/login: Autenticação de usuário e geração de Token JWT contendo tenant_id e user_id no payload.
+2. POST /time-records: Endpoint para bater ponto individual.
+   - Recebe dados do Pydantic (employee_id, record_type, client_timestamp, latitude, longitude, photo_base64).
+   - Valida as coordenadas GPS e gera o hash SHA-256 do registro.
+   - Retorna a confirmação e o comprovante assinado.
+3. POST /time-records/sync: Endpoint para receber uma lista de batidas criadas offline e gravar no banco salvando o sync_timestamp atual.
+
+Crie os arquivos necessários, instale as dependências no requirements.txt e configure a aplicação no main.py para rodar no servidor do Replit.
