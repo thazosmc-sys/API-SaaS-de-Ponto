@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nexo Ponto"
+description = "Frontend web responsivo para gestão de jornadas e registro de ponto, reunindo o painel de RH e as telas do colaborador em uma interface conectada à API existente. Os recursos ainda sem endpoint de backend serão identificados como demonstrativos."
+version = "1.0.0"
+id = "artifacts/nexo-ponto"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22342
+
+[services.development]
+run = "pnpm --filter @workspace/nexo-ponto run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexo-ponto", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nexo-ponto/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22342"
+BASE_PATH = "/"
