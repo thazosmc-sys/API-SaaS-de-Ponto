@@ -1,0 +1,13 @@
+@media (max-width: 767px) {
+  .min-h-screen:has(.nexo-dashboard-content) > .flex.min-h-screen > aside {
+    display: none;
+  }
+
+  .min-h-screen:has(.nexo-dashboard-content) > .flex.min-h-screen > .min-w-0.flex-1 > header {
+    padding-inline: 1rem;
+  }
+
+  .min-h-screen:has(.nexo-dashboard-content) > .flex.min-h-screen > .min-w-0.flex-1 > main {
+    padding: 1rem;
+  }
+}

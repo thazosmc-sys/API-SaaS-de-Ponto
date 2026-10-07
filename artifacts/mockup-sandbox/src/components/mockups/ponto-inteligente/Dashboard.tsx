@@ -4,8 +4,11 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CalendarDays,
+  CheckCircle2,
   ChevronDown,
+  Copy,
   Clock3,
+  Download,
   Fingerprint,
   LocateFixed,
   MapPin,
@@ -17,8 +20,10 @@ import {
   Signal,
   Users,
   Wifi,
+  X,
 } from "lucide-react";
 import { AppShell } from "./_shared/AppShell";
+import "./Dashboard.css";
 
 type ActivityKind = "biometria" | "gps";
 
@@ -42,7 +47,7 @@ const attendanceEvents: AttendanceEvent[] = [
     initials: "CN",
     tone: "from-sky-500 to-blue-700",
     kind: "biometria",
-    validation: "Face validada",
+    validation: "Biometria simulada",
   },
   {
     name: "Rafael Oliveira",
@@ -52,7 +57,7 @@ const attendanceEvents: AttendanceEvent[] = [
     initials: "RO",
     tone: "from-amber-500 to-orange-700",
     kind: "gps",
-    validation: "GPS validado",
+    validation: "GPS de demonstração",
   },
   {
     name: "Joana Martins",
@@ -62,7 +67,7 @@ const attendanceEvents: AttendanceEvent[] = [
     initials: "JM",
     tone: "from-violet-500 to-indigo-700",
     kind: "biometria",
-    validation: "Face validada",
+    validation: "Biometria simulada",
   },
   {
     name: "Diego Ferreira",
@@ -72,7 +77,7 @@ const attendanceEvents: AttendanceEvent[] = [
     initials: "DF",
     tone: "from-emerald-500 to-teal-700",
     kind: "gps",
-    validation: "GPS validado",
+    validation: "GPS de demonstração",
   },
   {
     name: "Paula Ribeiro",
@@ -82,7 +87,7 @@ const attendanceEvents: AttendanceEvent[] = [
     initials: "PR",
     tone: "from-rose-500 to-pink-700",
     kind: "biometria",
-    validation: "Face validada",
+    validation: "Biometria simulada",
   },
 ];
 
@@ -141,11 +146,11 @@ function ValidationBadge({ kind, validation }: { kind: ActivityKind; validation:
   );
 }
 
-function OperationalMap({ mode }: { mode: "todos" | "campo" | "remoto" }) {
+function OperationalMap({ mode, large = false }: { mode: "todos" | "campo" | "remoto"; large?: boolean }) {
   const showField = mode !== "remoto";
   const showRemote = mode !== "campo";
   return (
-    <div className="relative h-[260px] overflow-hidden rounded-xl border border-[#334155] bg-[#0F263B] sm:h-[296px]" aria-label="Mapa esquemático de marcações e cercas virtuais">
+    <div role="img" className={`relative overflow-hidden rounded-xl border border-[#334155] bg-[#0F263B] ${large ? "h-[min(70vh,620px)]" : "h-[260px] sm:h-[296px]"}`} aria-label="Mapa esquemático demonstrativo de marcações e cercas virtuais">
       <div className="absolute inset-0 nexo-grid opacity-60" />
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 720 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <path d="M-20 65 C105 87 177 21 282 55 S466 114 753 45" fill="none" stroke="#29445A" strokeWidth="15" />
@@ -196,7 +201,7 @@ function OperationalMap({ mode }: { mode: "todos" | "campo" | "remoto" }) {
         </div>
       </div>
       <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-lg border border-[#334155]/80 bg-[#0A1B2C]/90 px-2.5 py-1.5 text-[9px] font-medium text-slate-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" /> GPS ativo
+        <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" /> GPS de exemplo
       </div>
       <div className="absolute bottom-3 right-3 rounded-md border border-[#334155]/70 bg-[#0A1B2C]/80 px-2 py-1 text-[8px] font-medium tracking-wide text-slate-500">ZONA METROPOLITANA · SP</div>
     </div>
@@ -207,17 +212,58 @@ export function Dashboard() {
   const [mapMode, setMapMode] = useState<"todos" | "campo" | "remoto">("todos");
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
   const [showAllActivity, setShowAllActivity] = useState(false);
-  const [period, setPeriod] = useState("Hoje, 14 mai");
+  const [period, setPeriod] = useState(() => `Hoje · ${formatDayLabel(0)}`);
   const [periodOpen, setPeriodOpen] = useState(false);
+  const [activityMenuOpen, setActivityMenuOpen] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
+  const [notice, setNotice] = useState("");
   const visibleEvents = useMemo(() => showAllActivity ? attendanceEvents : attendanceEvents.slice(0, 4), [showAllActivity]);
+  const periodOptions = [`Hoje · ${formatDayLabel(0)}`, `Ontem · ${formatDayLabel(1)}`, "Esta semana"];
+
+  function resetView() {
+    setMapMode("todos");
+    setSelectedMetric(null);
+    setShowAllActivity(false);
+    setNotice("Filtros restaurados. Esta prévia usa dados fictícios e não sincroniza com o sistema.");
+  }
+
+  function downloadActivityCsv() {
+    const rows = [
+      ["Colaborador", "Cargo", "Horário", "Local", "Validação ilustrativa"],
+      ...attendanceEvents.map((event) => [event.name, event.role, event.time, event.place, event.validation]),
+    ];
+    const csv = rows.map((row) => row.map(csvCell).join(";")).join("\r\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = `nexo-ponto-demonstracao-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    setActivityMenuOpen(false);
+    setNotice("CSV demonstrativo baixado. O arquivo contém apenas dados fictícios.");
+  }
+
+  async function copyActivitySummary() {
+    const summary = attendanceEvents.map((event) => `${event.time} · ${event.name} · ${event.place}`).join("\n");
+    try {
+      await navigator.clipboard.writeText(`Atividade de demonstração — Nexo Ponto\n${summary}`);
+      setNotice("Resumo de demonstração copiado para a área de transferência.");
+    } catch {
+      setNotice("Não foi possível acessar a área de transferência neste navegador.");
+    }
+    setActivityMenuOpen(false);
+  }
 
   return (
     <AppShell active="overview">
-      <div className="mx-auto max-w-[1440px] space-y-5">
+      <div className="nexo-dashboard-content mx-auto max-w-[1440px] space-y-5 pb-16 sm:pb-0">
         <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <div className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-[#60A5FA]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" /> Operação em tempo real
+              <span className="h-1.5 w-1.5 rounded-full bg-[#60A5FA]" /> Painel operacional · demonstração
             </div>
             <h1 className="text-[24px] font-semibold tracking-tight text-slate-50 sm:text-[27px]">Visão geral</h1>
             <p className="mt-1 text-[12px] text-slate-400">Acompanhe a jornada da equipe em um só lugar.</p>
@@ -234,7 +280,7 @@ export function Dashboard() {
               </button>
               {periodOpen && (
                 <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-[#334155] bg-[#132A40] p-1 shadow-xl shadow-black/30">
-                  {["Hoje, 14 mai", "Ontem, 13 mai", "Esta semana"].map((option) => (
+                  {periodOptions.map((option) => (
                     <button key={option} type="button" onClick={() => { setPeriod(option); setPeriodOpen(false); }} className="block w-full rounded-md px-3 py-2 text-left text-[11px] text-slate-300 hover:bg-[#1E3A54] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]">
                       {option}
                     </button>
@@ -242,7 +288,7 @@ export function Dashboard() {
                 </div>
               )}
             </div>
-            <button type="button" onClick={() => { setMapMode("todos"); setSelectedMetric(null); }} aria-label="Atualizar visão" className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#334155] bg-[#132A40] text-slate-400 transition hover:border-slate-500 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]">
+            <button type="button" onClick={resetView} aria-label="Restaurar filtros da visão" className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#334155] bg-[#132A40] text-slate-400 transition hover:border-slate-500 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]">
               <RefreshCw size={14} />
             </button>
           </div>
@@ -254,13 +300,20 @@ export function Dashboard() {
           ))}
         </section>
 
+        {selectedMetric && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#3182CE]/25 bg-[#163654]/45 px-3.5 py-2.5 text-[10px] text-[#C5D8E9]" role="status">
+            <span><strong className="font-semibold text-[#BFDBFE]">{selectedMetric}</strong> em foco · indicadores e eventos são exemplos locais, sem conexão com registros reais.</span>
+            <button type="button" onClick={() => setSelectedMetric(null)} className="rounded-md px-2 py-1 font-semibold text-[#93C5FD] transition hover:bg-[#244661] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]">Limpar seleção</button>
+          </div>
+        )}
+
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(365px,0.9fr)]">
           <div className="min-w-0 rounded-2xl border border-[#334155] bg-[#1E293B] p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-[14px] font-semibold text-slate-100">Marcações no mapa</h2>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-[#10B981]/20 bg-[#10B981]/10 px-2 py-0.5 text-[9px] font-semibold text-[#6EE7B7]"><Radio size={10} /> AO VIVO</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#3182CE]/25 bg-[#3182CE]/10 px-2 py-0.5 text-[9px] font-semibold text-[#93C5FD]"><Radio size={10} /> PRÉVIA</span>
                 </div>
                 <p className="mt-1 text-[10px] text-slate-500">Localização das equipes e cercas virtuais</p>
               </div>
@@ -279,7 +332,7 @@ export function Dashboard() {
                 <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#60A5FA]" /> 46 remotos</span>
                 <span className="hidden items-center gap-1.5 md:inline-flex"><span className="h-1.5 w-1.5 rounded-full border border-[#3182CE]" /> 3 cercas ativas</span>
               </div>
-              <button type="button" className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#93C5FD] transition hover:text-white focus-visible:outline-none focus-visible:underline">
+              <button type="button" onClick={() => setMapExpanded(true)} className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#93C5FD] transition hover:text-white focus-visible:outline-none focus-visible:underline">
                 <LocateFixed size={12} /> Abrir mapa completo
               </button>
             </div>
@@ -290,11 +343,19 @@ export function Dashboard() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-[14px] font-semibold text-slate-100">Atividade recente</h2>
-                  <span className="rounded-md bg-[#132A40] px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">5 hoje</span>
+                  <span className="rounded-md bg-[#132A40] px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">5 amostras</span>
                 </div>
                 <p className="mt-1 text-[10px] text-slate-500">Últimas marcações registradas</p>
               </div>
-              <button type="button" aria-label="Mais opções de atividade" className="rounded-md p-1 text-slate-500 transition hover:bg-[#132A40] hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><MoreHorizontal size={17} /></button>
+              <div className="relative">
+                <button type="button" aria-label="Mais opções de atividade" aria-expanded={activityMenuOpen} onClick={() => setActivityMenuOpen((open) => !open)} className="rounded-md p-1 text-slate-500 transition hover:bg-[#132A40] hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><MoreHorizontal size={17} /></button>
+                {activityMenuOpen && (
+                  <div className="absolute right-0 top-full z-30 mt-1 w-52 rounded-lg border border-[#334155] bg-[#132A40] p-1 shadow-xl shadow-black/30" role="menu" aria-label="Opções da atividade">
+                    <button type="button" role="menuitem" onClick={downloadActivityCsv} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[10px] font-medium text-slate-200 transition hover:bg-[#1E3A54] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><Download size={13} className="text-[#93C5FD]" /> Baixar CSV demonstrativo</button>
+                    <button type="button" role="menuitem" onClick={copyActivitySummary} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[10px] font-medium text-slate-200 transition hover:bg-[#1E3A54] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><Copy size={13} className="text-[#93C5FD]" /> Copiar resumo</button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="divide-y divide-[#334155]/75">
               {visibleEvents.map((event) => (
@@ -322,10 +383,54 @@ export function Dashboard() {
         </section>
 
         <section className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#334155]/80 bg-[#132A40]/65 px-4 py-2.5 text-[9px] text-slate-500">
-          <span className="inline-flex items-center gap-1.5"><Signal size={12} className="text-[#10B981]" /> Atualização automática a cada 30 segundos</span>
-          <span>Dados de demonstração · sincronizado às 08:44</span>
+          <span className="inline-flex items-center gap-1.5"><Signal size={12} className="text-[#60A5FA]" /> Prévia demonstrativa · sem sincronização de dados</span>
+          <span>Biometria, GPS e marcações não são validados em produção</span>
         </section>
       </div>
+
+      <nav aria-label="Navegação operacional" className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-3 border-t border-[#334155] bg-[#0A1B2C]/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur md:hidden">
+        <a href="/__mockup/preview/ponto-inteligente/Dashboard" aria-current="page" className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg text-[#93C5FD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><Activity size={16} /><span className="text-[9px] font-semibold">Visão geral</span></a>
+        <a href="/__mockup/preview/ponto-inteligente/Timesheet" className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg text-slate-400 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><Clock3 size={16} /><span className="text-[9px] font-semibold">Espelho</span></a>
+        <a href="/__mockup/preview/ponto-inteligente/Compliance" className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg text-slate-400 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><ShieldCheck size={16} /><span className="text-[9px] font-semibold">Compliance</span></a>
+      </nav>
+
+      {notice && (
+        <div className="fixed bottom-20 right-3 z-[70] flex max-w-[min(92vw,420px)] items-start gap-2.5 rounded-xl border border-[#3B5872] bg-[#132A40] px-4 py-3 text-[11px] text-slate-200 shadow-xl shadow-black/30 md:bottom-5 md:right-5" role="status" aria-live="polite">
+          <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#6EE7B7]" />
+          <span className="flex-1 leading-relaxed">{notice}</span>
+          <button type="button" aria-label="Fechar aviso" onClick={() => setNotice("")} className="rounded p-0.5 text-slate-400 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><X size={14} /></button>
+        </div>
+      )}
+
+      {mapExpanded && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#020914]/80 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) setMapExpanded(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="full-map-title" className="my-auto w-full max-w-[1100px] overflow-hidden rounded-2xl border border-[#3A5065] bg-[#172A3D] shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#334155] px-5 py-4">
+              <div><h2 id="full-map-title" className="text-[14px] font-semibold text-slate-100">Mapa operacional</h2><p className="mt-1 text-[10px] text-slate-400">Visualização ilustrativa · unidades e cercas virtuais de exemplo</p></div>
+              <button type="button" aria-label="Fechar mapa" onClick={() => setMapExpanded(false)} className="rounded-md p-1.5 text-slate-400 transition hover:bg-[#243A4F] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"><X size={17} /></button>
+            </div>
+            <div className="p-4 sm:p-5"><OperationalMap mode={mapMode} large /></div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#334155] bg-[#132538] px-5 py-3 text-[10px] text-slate-400">
+              <span>Localizações fictícias para demonstração</span>
+              <button type="button" onClick={() => setMapExpanded(false)} className="rounded-lg bg-[#2B6CB0] px-3 py-2 font-semibold text-white transition hover:bg-[#3182CE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93C5FD]">Fechar mapa</button>
+            </div>
+          </section>
+        </div>
+      )}
     </AppShell>
   );
+}
+
+function formatDayLabel(offset: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - offset);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(date).replace(".", "");
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
 }
